@@ -14,16 +14,38 @@
 </head>
 <body>
     <header>
-        <img src="./images/tickify_logo.png" alt="tickify logo" class="header-logo">
-        <nav class="nav-bar">
-            <ul class="nav-bar-list">
-                <li class="nav-bar-item"><a href="">Login</a></li>
-                <li class="nav-bar-item"><a href="/signup.php">Sign up</a></li>
-            </ul>
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a href="./index.php"><img src="./images/tickify_logo.png" class="header-logo"></a>
+                <div class="d-flex" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                        <a class="nav-link active" aria-current="page" href="./index.php">Login</a>
+                        <a class="nav-link" href="./signup.php">Signup</a>
+                    </div>
+                </div>
+            </div>
         </nav>
     </header>
-    <main>
+    <main class="d-flex justify-content-center align-items-center" id="login-container">
+        <div class="card p-4 shadow login-card">
+            <h3 class="mb-3 text-center">Login</h3>
 
+            <form>
+                <div class="mb-3">
+                    <label for="loginEmail">Email</label>
+                    <input id="loginEmail" name="loginEmail" type="email" class="form-control">
+                    <span class="error-message">*</span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="loginPassword">Password</label>
+                    <input name="loginPassword" type="password" class="form-control">
+                    <span class="error-message">*</span>
+                </div>
+
+                <button class="btn w-100 form-button">Login</button>
+            </form>
+        </div>
     </main>
     <footer>
 

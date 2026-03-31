@@ -4,21 +4,59 @@
 }
 
 header {
-    background: #1b1b1b;
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 2rem 4rem;
+    background-color: white;
+    box-shadow: 4px 0px 6px black;
 }
 
 .header-logo {
-    width: 300px;
+    width: 200px;
 }
 
-.nav-bar-list {
-    display: flex;
-    list-style: none;
-    gap: 20px;
+.navbar .nav-link:hover {
+    color: #3175c9;
+}
+
+.navbar .nav-link.active {
     font-weight: bold;
+}
+
+#navbarNavAltMarkup {
+    padding: 0.5rem;
+}
+
+body {
+    background-color: #F5F7FB;
+}
+
+#login-title {
+    text-align: center;
+}
+
+#login-container {
+    background-image: url("./images/login_background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 12px;
+}
+
+.form-button {
+    background-color: #4F46E5;
+    color: white;
+}
+
+.form-button:hover {
+    background-color: #4338CA;
+    color: white;
+}
+
+.error-message {
+    color: red;
 }
