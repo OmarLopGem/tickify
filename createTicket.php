@@ -8,7 +8,7 @@ session_start();
 
 $title = "";
 $description = "";
-$satus = "open";
+$status = "open";
 $createdBy = "";
 $assignedTo = null;
 $errors = [];

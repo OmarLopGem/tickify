@@ -1,15 +1,19 @@
 <?php
-declare(strict_types= 1);
+declare(strict_types=1);
 require_once 'Ticket.php';
+require_once 'TicketComment.php';
 
-class TicketRepository {
+class TicketRepository
+{
     private PDO $pdo;
 
-    public function __construct(PDO $pdo) {
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function createTicket(Ticket $ticket): bool {
+    public function createTicket(Ticket $ticket): bool
+    {
         $sql = "INSERT INTO tickets (title, description, status, priority, created_by, assigned_to)
         VALUES (:title, :description, :status, :priority, :created_by, :assigned_to)";
 
@@ -25,17 +29,18 @@ class TicketRepository {
         ]);
 
         if ($success) {
-            $ticket->setId((int)$this->pdo->lastInsertId());
+            $ticket->setId((int) $this->pdo->lastInsertId());
         }
 
         return $success;
 
     }
 
-    public function getAllTickets(): array {
+    public function getAllTickets(): array
+    {
         $sql = "SELECT * FROM tickets ORDER BY created_at DESC";
         $stmt = $this->pdo->query($sql);
-        
+
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $tickets = [];
 
@@ -46,7 +51,8 @@ class TicketRepository {
         return $tickets;
     }
 
-    public function getById(int $id): ?Ticket {
+    public function getById(int $id): ?Ticket
+    {
         $sql = "SELECT * FROM tickets WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':id' => $id]);
@@ -60,7 +66,8 @@ class TicketRepository {
         return $this->mapRowToTicket($row);
     }
 
-    public function getByStatus(string $status): ?array {
+    public function getByStatus(string $status): ?array
+    {
         $sql = "SELECT * FROM tickets WHERE status = :status ORDER BY created_at DESC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':status' => $status]);
@@ -68,22 +75,88 @@ class TicketRepository {
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $tickets = [];
 
-        foreach($rows as $row) {
+        foreach ($rows as $row) {
             $tickets[] = $this->mapRowToTicket($row);
         }
 
         return $tickets;
     }
 
-    private function mapRowToTicket(array $row): Ticket {
+    public function getAllAsignedTo(int $userId): array
+    {
+        $sql = "SELECT * FROM tickets WHERE assigned_to = :assigned_to ORDER BY created_at DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':assigned_to' => $userId]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $tickets = [];
+
+        foreach ($rows as $row) {
+            $tickets[] = $this->mapRowToTicket($row);
+        }
+
+        return $tickets;
+    }
+
+    public function getFilteredTickets(string $status = '', string $priority = ''): array
+    {
+        $sql = 'SELECT * FROM tickets WHERE assigned_to = 1';
+        $params = [];
+
+        if ($status !== '') {
+            $sql .= ' AND status = :status';
+            $params[':status'] = $status;
+        }
+
+        if ($priority !== '') {
+            $sql .= ' AND priority = :priority';
+            $params[':priority'] = (int) $priority;
+        }
+
+        $sql .= ' ORDER BY created_at DESC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        $tickets = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $tickets[] = new Ticket(
+                $row['id'],
+                $row['title'],
+                $row['description'],
+                $row['status'],
+                (int) $row['priority'],
+                (int) $row['created_by'],
+                $row['assigned_to'] ? (int) $row['assigned_to'] : null,
+                $row['created_at'],
+                $row['updated_at']
+            );
+        }
+
+        return $tickets;
+    }
+
+
+    public function getCommentsByTicketId(int $ticketId): array
+    {
+        $sql = "SELECT * FROM ticket_comments WHERE ticket_id = :ticket_id ORDER BY created_at ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':ticket_id' => $ticketId]);
+
+        $comments = array_map([TicketComment::class, 'fromRow'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+        return $comments;
+    }
+
+    private function mapRowToTicket(array $row): Ticket
+    {
         return new Ticket(
-            isset($row['id']) ? (int)$row['id'] : null,
+            isset($row['id']) ? (int) $row['id'] : null,
             $row['title'],
             $row['description'] ?? null,
             $row['status'],
-            isset($row['priority']) ? (int)$row['priority'] : 3,
-            isset($row['created_by']) && $row['created_by'] !== null ? (int)$row['created_by'] : null,
-            isset($row['assigned_to']) && $row['assigned_to'] !== null ? (int)$row['assigned_to'] : null,
+            isset($row['priority']) ? (int) $row['priority'] : 3,
+            isset($row['created_by']) && $row['created_by'] !== null ? (int) $row['created_by'] : null,
+            isset($row['assigned_to']) && $row['assigned_to'] !== null ? (int) $row['assigned_to'] : null,
             $row['created_at'] ?? null,
             $row['updated_at'] ?? null
         );
