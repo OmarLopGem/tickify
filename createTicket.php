@@ -1,30 +1,38 @@
 <?php
+declare(strict_types= 1);
 require_once 'Ticket.php';
 require_once 'TicketRepository.php';
 require_once 'database.php';
 
 session_start();
 
+$title = "";
+$description = "";
+$satus = "open";
+$createdBy = "";
+$assignedTo = null;
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? null;
     $priority = isset($_POST['priority']) ? (int)$_POST['priority'] : 3;
-    $assignedTo = !empty($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : null;
     $createdBy = $_SESSION['user_id'] ?? null;
+
+    //validation
+    if (empty($title)) {
+        
+    }
 
     $ticket = new Ticket(
         null,
         $title,
         $description,
-        'open',
+        $status,
         $priority,
         $createdBy,
         $assignedTo
     );
-
-    $errors = $ticket->validate();
 
     if (empty($errors)) {
         $ticketRepository = new TicketRepository($pdo);
@@ -85,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <label for="title">Title</label>
-            <input type="text" id="title" name="title" value="" required>
+            <input type="text" id="title" name="title" value=<?php echo htmlspecialchars($title); ?> required>
 
         </form>
     </main>
