@@ -33,13 +33,13 @@
             <form>
                 <div class="mb-3">
                     <label for="loginEmail">Email</label>
-                    <input id="loginEmail" name="loginEmail" type="email" class="form-control">
+                    <input type="email" id="loginEmail" name="loginEmail" class="form-control">
                     <span class="error-message">*</span>
                 </div>
 
                 <div class="mb-3">
                     <label for="loginPassword">Password</label>
-                    <input name="loginPassword" type="password" class="form-control">
+                    <input type="password" id="loginPassword" name="loginPassword" class="form-control">
                     <span class="error-message">*</span>
                 </div>
 
@@ -47,8 +47,16 @@
             </form>
         </div>
     </main>
-    <footer>
+    <footer class="footer">
+        <div class="container d-flex justify-content-between align-items-center">
+            
+            <p class="mb-0">&copy; 2026 Tickify</p>
+            
+            <p class="mb-0">
+                Built by Omar, Daniel & Sneh
+            </p>
 
+        </div>
     </footer>
 </body>
 </html>
