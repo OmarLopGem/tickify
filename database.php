@@ -12,8 +12,6 @@ try {
     $pdo = new PDO($dsn, DB_USER, DB_PASSWORD);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    echo "SYSTEM ONLINE: Database Connected.";
-
 } catch (PDOException $e) {
     die("SYSTEM FAILURE (DB Connection): " . $e->getMessage());
 }

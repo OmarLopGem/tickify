@@ -14,7 +14,7 @@ class TicketRepository {
         VALUES (:title, :description, :status, :priority, :created_by, :assigned_to)";
 
         $stmt = $this->pdo->prepare($sql);
-
+ 
         $success = $stmt->execute([
             ':title' => $ticket->getTitle(),
             ':description' => $ticket->getDescription(),
@@ -77,15 +77,15 @@ class TicketRepository {
 
     private function mapRowToTicket(array $row): Ticket {
         return new Ticket(
-            isset($row['id']) ? (int)$row['id'] : null,
+            $row['id'],
             $row['title'],
-            $row['description'] ?? null,
+            $row['description'],
             $row['status'],
-            isset($row['priority']) ? (int)$row['priority'] : 3,
-            isset($row['created_by']) && $row['created_by'] !== null ? (int)$row['created_by'] : null,
-            isset($row['assigned_to']) && $row['assigned_to'] !== null ? (int)$row['assigned_to'] : null,
-            $row['created_at'] ?? null,
-            $row['updated_at'] ?? null
+            $row['priority'],
+            $row['created_by'],
+            $row['assigned_to'],
+            $row['created_at'],
+            $row['updated_at']
         );
     }
 }

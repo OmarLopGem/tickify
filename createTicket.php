@@ -8,21 +8,17 @@ session_start();
 
 $title = "";
 $description = "";
-$satus = "open";
-$createdBy = "";
-$assignedTo = null;
+$status = "open";
+$priority = 3;
+$assignedTo = 1;
 $errors = [];
+$successMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
-    $description = $_POST['description'] ?? null;
+    $description = $_POST['description'] ?? '';
     $priority = isset($_POST['priority']) ? (int)$_POST['priority'] : 3;
-    $createdBy = $_SESSION['user_id'] ?? null;
-
-    //validation
-    if (empty($title)) {
-        
-    }
+    $createdBy = 2;
 
     $ticket = new Ticket(
         null,
@@ -34,21 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $assignedTo
     );
 
-    if (empty($errors)) {
-        $ticketRepository = new TicketRepository($pdo);
+    $errors = $ticket->validate();
 
-        if ($ticketRepository->createTicket($ticket)) {
-            $successMessage = 'Ticket created successfully.';
-            $title = '';
-            $description = '';
-            $priority = 3;
-            $assignedTo = '';
-        } else {
-            $errors['general'] = 'Error creating ticket.';
+    if (empty($errors)) {
+        try {
+            $ticketRepository = new TicketRepository($pdo);
+            $ticketRepository->createTicket($ticket);
+            header("location: createTicket.php");
+        } catch (PDOException $e) {
+            die("Could not add the ticket" . $e->getMessage());
         }
+        
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -65,35 +59,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header>
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
-                <a href="./index.php"><img src="./images/tickify_logo.png" class="header-logo"></a>
-                <div class="d-flex" id="navbarNavAltMarkup">
-                    <div class="navbar-nav">
-                        <a class="nav-link" href="./dashboard.php">Dashboard</a>
-                        <a class="nav-link active" aria-current="page" href="./createTicket.php">Create a Ticker</a>
-                        <a class="nav-link" href="./dashboard.php">Logout</a>
-                    </div>
+                <a class="navbar-brand" href="./index.php"><img src="./images/tickify_logo.png" class="header-logo"></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="./userDashboard.php">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="./createTicket.php">Create a Ticket</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Logout</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
     <main class="d-flex justify-content-center align-items-center">
-        
 
-        <form method="POST" action="">
-            <?php if ($successMessage !== ''): ?>
-                <div class="alert alert-success">
-                    <?= htmlspecialchars($successMessage) ?>
-                </div>
-            <?php endif; ?>
+            <div class="input-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" value="<?php echo htmlspecialchars(trim($title)); ?>">
+                <?php if(isset($errors['title'])) echo "<span class='error-message'>{$errors['title']}</span>";?>
+            </div>
 
-            <?php if (isset($errors['general'])): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($errors['general']) ?>
-                </div>
-            <?php endif; ?>
+            <div class="input-group">
+                <label for="description">Description</label>
+                <textarea rows="4" id="description" name="description"><?php echo htmlspecialchars(trim($description)); ?></textarea>
+                <?php if(isset($errors['description'])) echo "<span class='error-message'>{$errors['description']}</span>";?>
+            </div>
 
-            <label for="title">Title</label>
-            <input type="text" id="title" name="title" value=<?php echo htmlspecialchars($title); ?> required>
+            <div class="input-group">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority">
+                    <option value="1" <?php echo ($priority == 1) ? 'selected' : ''; ?>>1</option>
+                    <option value="2" <?php echo ($priority == 2) ? 'selected' : ''; ?>>2</option>
+                    <option value="3" <?php echo ($priority == 3) ? 'selected' : ''; ?>>3</option>
+                    <option value="4" <?php echo ($priority == 4) ? 'selected' : ''; ?>>4</option>
+                    <option value="5" <?php echo ($priority == 5) ? 'selected' : ''; ?>>5</option>
+                </select>
+                <?php if (isset($errors['priority'])) echo "<span class='error-message'>{$errors['priority']}</span>"; ?>
+            </div>
+            
+            <button type="submit">Submit</button>
 
         </form>
     </main>

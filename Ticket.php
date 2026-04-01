@@ -3,22 +3,22 @@ declare(strict_types= 1);
 class Ticket {
     private ?int $id;
     private string $title;
-    private ?string $description;
+    private string $description;
     private string $status;
     private int $priority;
-    private ?int $createdBy;
-    private ?int $assignedTo;
+    private int $createdBy;
+    private int $assignedTo;
     private ?string $createdAt;
     private ?string $updatedAt;
 
     public function __construct(
         ?int $id,
         string $title,
-        ?string $description = null,
-        string $status = 'open',
-        int $priority = 3,
-        ?int $createdBy = null,
-        ?int $assignedTo = null,
+        string $description,
+        string $status,
+        int $priority,
+        int $createdBy,
+        int $assignedTo,
         ?string $createdAt = null,
         ?string $updatedAt = null
     ) {
@@ -78,25 +78,18 @@ class Ticket {
 
         if ($this->title === '') {
             $errors['title'] = 'Title is required.';
-        } elseif (mb_strlen($this->title) > 200) {
-            $errors['title'] = 'Title cannot exceed 200 characters.';
+        } elseif (mb_strlen($this->title) > 50) {
+            $errors['title'] = 'Title cannot exceed 50 characters.';
         }
 
-        $allowedStatuses = ['open', 'in_progress', 'on_hold', 'resolved', 'closed', 'cancelled'];
-        if (!in_array($this->status, $allowedStatuses, true)) {
-            $errors['status'] = 'Invalid status.';
+        if ($this->description === '') {
+            $errors['description'] = 'description is required.';
+        } elseif (mb_strlen($this->description) > 200) {
+            $errors['description'] = 'Description cannot exceed 200 characters.';
         }
 
         if ($this->priority < 1 || $this->priority > 5) {
             $errors['priority'] = 'Priority must be between 1 and 5.';
-        }
-
-        if ($this->createdBy !== null && $this->createdBy <= 0) {
-            $errors['created_by'] = 'Invalid creator.';
-        }
-
-        if ($this->assignedTo !== null && $this->assignedTo <= 0) {
-            $errors['assigned_to'] = 'Invalid assigned user.';
         }
 
         return $errors;
