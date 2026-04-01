@@ -81,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </header>
     <main class="d-flex justify-content-center align-items-center">
 
+        <form method="POST" action="">
             <div class="input-group">
                 <label for="title">Title</label>
                 <input type="text" id="title" name="title" value="<?php echo htmlspecialchars(trim($title)); ?>">
