@@ -6,8 +6,14 @@ require_once 'database.php';
 
 session_start();
 
+$search = $_GET['search'] ?? '';
+
 $ticketRepository = new TicketRepository($pdo);
-$ticketsArray = $ticketRepository->getAllTickets();
+if ($search) {
+    $ticketsArray = $ticketRepository->searchTickets($search);
+} else {
+    $ticketsArray = $ticketRepository->getAllTickets();
+}
 
 ?>
 
@@ -41,8 +47,8 @@ $ticketsArray = $ticketRepository->getAllTickets();
                             <a class="nav-link" href="#">Logout</a>
                         </li>
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
+                    <form class="d-flex" method="GET" action="userDashboard.php" role="search">
+                        <input class="form-control me-2" type="search" name="search" placeholder="Search" value="<?= htmlspecialchars($search) ?>" aria-label="Search"/>
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
                 </div>
@@ -57,7 +63,7 @@ $ticketsArray = $ticketRepository->getAllTickets();
                 <?= $ticket->getPriority() ?>
                 <?= $ticket->getStatus() ?>
                 <?= $ticket->getAssignedTo() ?>
-                <button ></button>
+                <a href="ticketPDF.php?id=<?= $ticket->getId() ?>" target="_blank" class="btn">Download PDF</a>
             </div>
         <?php endforeach ?>
     </main>

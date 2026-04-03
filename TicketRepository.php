@@ -183,6 +183,29 @@ class TicketRepository
             $row['updated_at']
         );
     }
+
+    public function searchTickets(string $search): array {
+        $stmt = $this->pdo->prepare("SELECT * FROM tickets WHERE title LIKE :search OR description LIKE :search");
+        $stmt->execute([
+            'search' => "%$search%"
+        ]);
+
+        $results = [];
+
+        while ($row = $stmt->fetch()) {
+            $results[] = new Ticket(
+                $row['id'],
+                $row['title'],
+                $row['description'],
+                $row['status'],
+                $row['priority'],
+                $row['created_by'],
+                $row['assigned_to']
+            );
+        }
+
+        return $results;
+    }
 }
 
 ?>

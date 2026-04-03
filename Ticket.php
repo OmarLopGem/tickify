@@ -23,8 +23,8 @@ class Ticket {
         ?string $updatedAt = null
     ) {
         $this->id = $id;
-        $this->title = trim($title);
-        $this->description = $description !== null ? trim($description) : null;
+        $this->title = $title;
+        $this->description = $description;
         $this->status = $status;
         $this->priority = $priority;
         $this->createdBy = $createdBy;
