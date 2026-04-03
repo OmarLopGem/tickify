@@ -82,10 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             <div class="alert alert-danger"><?= htmlspecialchars($errors['general']) ?></div>
         <?php endif; ?>
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2>Tickets</h2>
-            <a href="./create_ticket.php" class="btn btn-primary">New Ticket</a>
-        </div>
+        
 
         <?php if (empty($tickets)): ?>
             <div class="alert alert-info">No tickets found.</div>

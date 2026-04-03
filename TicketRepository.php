@@ -147,6 +147,28 @@ class TicketRepository
         return $comments;
     }
 
+        public function updateStatusAndPriority(int $id, string $status, int $priority): void
+    {
+        $sql = "UPDATE tickets SET status = :status, priority = :priority WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':status' => $status,
+            ':priority' => $priority,
+            ':id' => $id
+        ]);
+    }
+
+    public function addComment(int $ticketId, int $authorId, string $body): void
+    {
+        $sql = "INSERT INTO ticket_comments (ticket_id, author_id, body) VALUES (:ticket_id, :author_id, :body)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':ticket_id' => $ticketId,
+            ':author_id' => $authorId,
+            ':body' => $body
+        ]);
+    }
+
     private function mapRowToTicket(array $row): Ticket
     {
         return new Ticket(

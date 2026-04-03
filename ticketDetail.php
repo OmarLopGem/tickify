@@ -81,10 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         <?php endif; ?>
 
         <?php if ($ticket): ?>
-            <!-- Back button -->
             <a href="./TicketManagement.php" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to Tickets</a>
 
-            <!-- Ticket detail card -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Ticket #<?= $ticket->getId() ?></h4>
@@ -96,8 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <hr>
 
-                    <!-- Status & Priority update form -->
-                    <form method="POST" action="./updateTicket.php" class="row g-2 align-items-end">
+                    <form method="POST" action="./utilsTicketRest/updateTicket.php" class="row g-2 align-items-end">
                         <input type="hidden" name="id" value="<?= $ticket->getId() ?>">
 
                         <div class="col-auto">
@@ -129,7 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <hr>
 
-                    <!-- Current badges -->
                     <div class="d-flex gap-2">
                         <?php
                         $statusEnum = TicketStatusEnum::from($ticket->getStatus());
@@ -148,7 +144,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 </div>
             </div>
 
-            <!-- Comments section -->
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Comments (<?= count($comments) ?>)</h5>
@@ -172,8 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <hr>
 
-                    <!-- New comment form -->
-                    <form method="POST" action="./addComment.php">
+                    <form method="POST" action="./utilsTicketRest/addComment.php">
                         <input type="hidden" name="ticket_id" value="<?= $ticket->getId() ?>">
                         <div class="mb-2">
                             <textarea name="body" class="form-control" rows="3" placeholder="Write a comment..."

@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-            $ticketRepository = new TicketRepository($pdo);
+        $ticketRepository = new TicketRepository($pdo);
             $ticketRepository->createTicket($ticket);
             header("location: createTicket.php");
         } catch (PDOException $e) {
@@ -86,13 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="title">Title</label>
                 <input type="text" id="title" name="title" value="<?php echo htmlspecialchars(trim($title)); ?>">
                 <?php if(isset($errors['title'])) echo "<span class='error-message'>{$errors['title']}</span>";?>
-            </div>
+                </div>
 
             <div class="input-group">
                 <label for="description">Description</label>
                 <textarea rows="4" id="description" name="description"><?php echo htmlspecialchars(trim($description)); ?></textarea>
                 <?php if(isset($errors['description'])) echo "<span class='error-message'>{$errors['description']}</span>";?>
-            </div>
+                </div>
 
             <div class="input-group">
                 <label for="priority">Priority</label>
