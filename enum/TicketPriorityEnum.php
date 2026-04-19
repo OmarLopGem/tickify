@@ -1,32 +1,79 @@
 <?php
-enum TicketPriorityEnum: int
+final class TicketPriorityEnum
 {
-    case Critical = 1;
-    case High = 2;
-    case Medium = 3;
-    case Low = 4;
-    case Trivial = 5;
+    public const CRITICAL = 1;
+    public const HIGH = 2;
+    public const MEDIUM = 3;
+    public const LOW = 4;
+    public const TRIVIAL = 5;
+
+    public int $value;
+
+    private function __construct(int $value)
+    {
+        $this->value = $value;
+    }
+
+    public static function from(int $value): self
+    {
+        if (!in_array($value, self::values(), true)) {
+            throw new ValueError('Invalid TicketPriorityEnum value');
+        }
+        return new self($value);
+    }
+
+    /** @return self[] */
+    public static function cases(): array
+    {
+        return array_map(static fn (int $v) => new self($v), self::values());
+    }
+
+    /** @return int[] */
+    private static function values(): array
+    {
+        return [
+            self::CRITICAL,
+            self::HIGH,
+            self::MEDIUM,
+            self::LOW,
+            self::TRIVIAL,
+        ];
+    }
 
     public function label(): string
     {
-        return match ($this) {
-            self::Critical => 'Critical',
-            self::High => 'High',
-            self::Medium => 'Medium',
-            self::Low => 'Low',
-            self::Trivial => 'Trivial',
-        };
+        switch ($this->value) {
+            case self::CRITICAL:
+                return 'Critical';
+            case self::HIGH:
+                return 'High';
+            case self::MEDIUM:
+                return 'Medium';
+            case self::LOW:
+                return 'Low';
+            case self::TRIVIAL:
+                return 'Trivial';
+        }
+
+        return 'Medium';
     }
 
     public function color(): string
     {
-        return match ($this) {
-            self::Critical => '#DC2626',
-            self::High => '#F97316',    
-            self::Medium => '#EAB308',
-            self::Low => '#3B82F6', 
-            self::Trivial => '#9CA3AF', 
-        };
+        switch ($this->value) {
+            case self::CRITICAL:
+                return '#DC2626';
+            case self::HIGH:
+                return '#F97316';
+            case self::MEDIUM:
+                return '#EAB308';
+            case self::LOW:
+                return '#3B82F6';
+            case self::TRIVIAL:
+                return '#9CA3AF';
+        }
+
+        return '#EAB308';
     }
 }
 ?>
