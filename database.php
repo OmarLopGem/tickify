@@ -1,11 +1,12 @@
 <?php
 declare(strict_types= 1);
 define('DB_USER', 'root');
-define('DB_PASSWORD', 'admin');
-define('DB_HOST', 'localhost');
+define('DB_PASSWORD', '');
+define('DB_HOST', '127.0.0.1');
+define('DB_PORT', 3307);
 define('DB_NAME', 'php_project');
 
-$dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+$dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
 $pdo = null;
 
 try {
