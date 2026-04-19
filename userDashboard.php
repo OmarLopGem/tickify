@@ -9,18 +9,20 @@ require_once 'enum/TicketStatusEnum.php';
 
 require_login();
 
-if (current_user_type() === 'admin') {
-    header('Location: TicketManagement.php');
-    exit;
+$userId = $_SESSION['user_id'] ?? null;
+
+if (!$userId) {
+    die('User not logged in');
 }
 
 $search = $_GET['search'] ?? '';
 
 $ticketRepository = new TicketRepository($pdo);
+
 if ($search) {
-    $ticketsArray = $ticketRepository->searchTickets($search);
+    $ticketsArray = $ticketRepository->searchTicketsByUser((int)$userId, $search);
 } else {
-    $ticketsArray = $ticketRepository->getAllTickets();
+    $ticketsArray = $ticketRepository->getAllCreatedBy((int)$userId);
 }
 
 ?>

@@ -98,7 +98,7 @@ class TicketRepository
         return $tickets;
     }
 
-    public function getFilteredTickets(string $status = '', string $priority = ''): array
+    public function getFilteredTickets(string $status = '', string $priority = '', string $search = ''): array
     {
         $sql = 'SELECT * FROM tickets WHERE assigned_to = 1';
         $params = [];
@@ -111,6 +111,11 @@ class TicketRepository
         if ($priority !== '') {
             $sql .= ' AND priority = :priority';
             $params[':priority'] = (int) $priority;
+        }
+
+        if ($search !== '') {
+            $sql .= ' AND (title LIKE :search OR description LIKE :search)';
+            $params[':search'] = '%' . $search . '%';
         }
 
         $sql .= ' ORDER BY created_at DESC';
@@ -205,6 +210,60 @@ class TicketRepository
         }
 
         return $results;
+    }
+
+    public function getAllCreatedBy(int $id): array {
+        $sql = "SELECT * FROM tickets WHERE created_by = :userId ORDER BY created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':userId' => $id]);
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $tickets = [];
+
+        foreach($rows as $row) {
+            $tickets[] = $this->mapRowToTicket($row);
+        }
+
+        return $tickets;
+    }
+
+    public function searchTicketsByUser(int $userId, string $search): array {
+        $sql = "SELECT * FROM tickets
+                WHERE created_by = :user_id
+                AND (title LIKE :search OR description LIKE :search)
+                ORDER BY created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':user_id' => $userId,
+            ':search' => '%' . $search . '%'
+        ]);
+
+        $results = [];
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $results[] = $this->mapRowToTicket($row);
+        }
+
+        return $results;
+    }
+
+    public function getByIdAndUser(int $ticketId, int $userId): ?Ticket {
+        $sql = "SELECT * FROM tickets WHERE id = :id AND created_by = :created_by";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':id' => $ticketId,
+            ':created_by' => $userId
+        ]);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            return null;
+        }
+
+        return $this->mapRowToTicket($row);
     }
 }
 

@@ -47,9 +47,8 @@ function login_user(array $userRow): void
     $_SESSION['user_name'] = (string)($userRow['name'] ?? '');
     $_SESSION['user_email'] = (string)($userRow['email'] ?? '');
 
-    $type = $userRow['user_type'] ?? ($userRow['role'] ?? ($userRow['type'] ?? 'user'));
-    $type = is_string($type) ? mb_strtolower(trim($type)) : 'user';
-    $_SESSION['user_type'] = $type === 'admin' ? 'admin' : 'user';
+    $isAdmin = (int)($userRow['is_admin'] ?? 0);
+    $_SESSION['user_type'] = $isAdmin === 1 ? 'admin' : 'user';
 }
 
 function logout_user(): void

@@ -23,10 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $ticketRepository = new TicketRepository($pdo);
         $filterStatus = $_GET['status'] ?? '';
         $filterPriority = $_GET['priority'] ?? '';
+        $search = trim((string)($_GET['search'] ?? ''));
 
         try {
             $ticketRepository = new TicketRepository($pdo);
-            $tickets = $ticketRepository->getFilteredTickets($filterStatus, $filterPriority);
+            $tickets = $ticketRepository->getFilteredTickets($filterStatus, $filterPriority, $search);
         } catch (Exception $e) {
             $errors['general'] = 'Error fetching tickets: ' . $e->getMessage();
         }
@@ -70,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             <a class="nav-link" href="./logout.php">Logout</a>
                         </li>
                     </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
+                    <form class="d-flex" method="GET" action="" role="search">
+                        <input class="form-control me-2" name="search" type="search" placeholder="Search" value="<?= htmlspecialchars($search ?? '') ?>" aria-label="Search"/>
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
                 </div>
@@ -91,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             <div class="table-responsive">
 
                 <form method="GET" class="row g-2 mb-3 align-items-end">
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
                     <div class="col-auto">
                         <label class="form-label mb-0">Status</label>
                         <select name="status" class="form-select form-select-sm">

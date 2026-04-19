@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? '';
     $priority = isset($_POST['priority']) ? (int)$_POST['priority'] : 3;
-    $createdBy = 2;
+    $createdBy = $_SESSION['user_id'];
 
     $ticket = new Ticket(
         null,
