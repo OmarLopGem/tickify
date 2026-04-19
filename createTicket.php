@@ -3,8 +3,9 @@ declare(strict_types= 1);
 require_once 'Ticket.php';
 require_once 'TicketRepository.php';
 require_once 'database.php';
+require_once 'auth.php';
 
-session_start();
+require_login();
 
 $title = "";
 $description = "";
@@ -12,13 +13,17 @@ $status = "open";
 $priority = 3;
 $assignedTo = 1;
 $errors = [];
-$successMessage = '';
+$created = ($_GET['created'] ?? '') === '1';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'] ?? '';
     $description = $_POST['description'] ?? '';
     $priority = isset($_POST['priority']) ? (int)$_POST['priority'] : 3;
-    $createdBy = $_SESSION['user_id'];
+    $createdBy = (int)($_SESSION['user_id'] ?? 0);
+
+    if ($createdBy <= 0) {
+        $errors['general'] = 'You must be logged in to create a ticket.';
+    }
 
     $ticket = new Ticket(
         null,
@@ -30,13 +35,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $assignedTo
     );
 
-    $errors = $ticket->validate();
+    if (empty($errors)) {
+        $errors = $ticket->validate();
+    }
 
     if (empty($errors)) {
         try {
         $ticketRepository = new TicketRepository($pdo);
             $ticketRepository->createTicket($ticket);
-            header("location: createTicket.php");
+            header('Location: createTicket.php?created=1');
+            exit;
         } catch (PDOException $e) {
             die("Could not add the ticket" . $e->getMessage());
         }
@@ -72,43 +80,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <a class="nav-link active" aria-current="page" href="./createTicket.php">Create a Ticket</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Logout</a>
+                            <a class="nav-link" href="./logout.php">Logout</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <main class="d-flex justify-content-center align-items-center">
+    <main class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                <div class="card p-4 shadow">
+                    <h3 class="mb-3 text-center">Create a Ticket</h3>
 
-        <form method="POST" action="">
-            <div class="input-group">
-                <label for="title">Title</label>
-                <input type="text" id="title" name="title" value="<?php echo htmlspecialchars(trim($title)); ?>">
-                <?php if(isset($errors['title'])) echo "<span class='error-message'>{$errors['title']}</span>";?>
+                    <?php if ($created): ?>
+                        <div class="alert alert-success" role="alert">
+                            Ticket created successfully.
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($errors['general'])): ?>
+                        <div class="alert alert-danger" role="alert">
+                            <?= htmlspecialchars($errors['general']) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" id="title" name="title" class="form-control" value="<?= htmlspecialchars(trim($title)) ?>">
+                            <?php if(isset($errors['title'])): ?>
+                                <div class="error-message"><?= htmlspecialchars($errors['title']) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea rows="4" id="description" name="description" class="form-control"><?= htmlspecialchars(trim($description)) ?></textarea>
+                            <?php if(isset($errors['description'])): ?>
+                                <div class="error-message"><?= htmlspecialchars($errors['description']) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select id="priority" name="priority" class="form-select">
+                                <option value="1" <?= ($priority == 1) ? 'selected' : ''; ?>>1</option>
+                                <option value="2" <?= ($priority == 2) ? 'selected' : ''; ?>>2</option>
+                                <option value="3" <?= ($priority == 3) ? 'selected' : ''; ?>>3</option>
+                                <option value="4" <?= ($priority == 4) ? 'selected' : ''; ?>>4</option>
+                                <option value="5" <?= ($priority == 5) ? 'selected' : ''; ?>>5</option>
+                            </select>
+                            <?php if (isset($errors['priority'])): ?>
+                                <div class="error-message"><?= htmlspecialchars($errors['priority']) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <button class="btn w-100 form-button" type="submit">Submit</button>
+                    </form>
                 </div>
-
-            <div class="input-group">
-                <label for="description">Description</label>
-                <textarea rows="4" id="description" name="description"><?php echo htmlspecialchars(trim($description)); ?></textarea>
-                <?php if(isset($errors['description'])) echo "<span class='error-message'>{$errors['description']}</span>";?>
-                </div>
-
-            <div class="input-group">
-                <label for="priority">Priority</label>
-                <select id="priority" name="priority">
-                    <option value="1" <?php echo ($priority == 1) ? 'selected' : ''; ?>>1</option>
-                    <option value="2" <?php echo ($priority == 2) ? 'selected' : ''; ?>>2</option>
-                    <option value="3" <?php echo ($priority == 3) ? 'selected' : ''; ?>>3</option>
-                    <option value="4" <?php echo ($priority == 4) ? 'selected' : ''; ?>>4</option>
-                    <option value="5" <?php echo ($priority == 5) ? 'selected' : ''; ?>>5</option>
-                </select>
-                <?php if (isset($errors['priority'])) echo "<span class='error-message'>{$errors['priority']}</span>"; ?>
             </div>
-            
-            <button type="submit">Submit</button>
-
-        </form>
+        </div>
     </main>
     <footer class="footer">
         <div class="container d-flex justify-content-between align-items-center">
