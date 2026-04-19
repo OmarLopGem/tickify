@@ -7,7 +7,7 @@ class Ticket {
     private string $status;
     private int $priority;
     private int $createdBy;
-    private int $assignedTo;
+    private ?int $assignedTo;
     private ?string $createdAt;
     private ?string $updatedAt;
 
@@ -18,7 +18,7 @@ class Ticket {
         string $status,
         int $priority,
         int $createdBy,
-        int $assignedTo,
+        ?int $assignedTo,
         ?string $createdAt = null,
         ?string $updatedAt = null
     ) {
