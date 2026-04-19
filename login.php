@@ -1,7 +1,57 @@
 <?php
-declare(strict_types= 1);;
+declare(strict_types=1);
 
+require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/UserRepository.php';
+require_once __DIR__ . '/auth.php';
 
+ensure_session_started();
+
+if (is_logged_in()) {
+    header('Location: ' . (current_user_type() === 'admin' ? 'TicketManagement.php' : 'userDashboard.php'));
+    exit;
+}
+
+$loginEmail = '';
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $loginEmail = trim((string)($_POST['loginEmail'] ?? ''));
+    $loginPassword = (string)($_POST['loginPassword'] ?? '');
+
+    if ($loginEmail === '') {
+        $errors['loginEmail'] = 'Email is required.';
+    } elseif (!filter_var($loginEmail, FILTER_VALIDATE_EMAIL)) {
+        $errors['loginEmail'] = 'Please enter a valid email.';
+    }
+
+    if ($loginPassword === '') {
+        $errors['loginPassword'] = 'Password is required.';
+    }
+
+    if (empty($errors)) {
+        try {
+            $userRepository = new UserRepository($pdo);
+            $user = $userRepository->findByEmail(mb_strtolower($loginEmail));
+
+            $storedPassword = (string)($user['password'] ?? '');
+            $passwordOk = $storedPassword !== '' && (
+                password_verify($loginPassword, $storedPassword) ||
+                hash_equals($storedPassword, $loginPassword)
+            );
+
+            if (!$user || !$passwordOk) {
+                $errors['general'] = 'Invalid email or password.';
+            } else {
+                login_user($user);
+                header('Location: ' . (current_user_type() === 'admin' ? 'TicketManagement.php' : 'userDashboard.php'));
+                exit;
+            }
+        } catch (Throwable $e) {
+            $errors['general'] = 'Login failed. Please try again.';
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -39,20 +89,26 @@ declare(strict_types= 1);;
         <div class="card p-4 shadow login-card">
             <h3 class="mb-3 text-center">Login</h3>
 
-            <form>
+            <?php if (isset($errors['general'])): ?>
+                <div class="alert alert-danger" role="alert">
+                    <?= htmlspecialchars($errors['general']) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="">
                 <div class="mb-3">
                     <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" name="loginEmail" class="form-control">
-                    <?php if(isset($errors['loginEmail'])) echo "<span class='error-message'>{$errors['loginEmail']}</span>";?>
+                    <input type="email" id="loginEmail" name="loginEmail" class="form-control" value="<?= htmlspecialchars($loginEmail) ?>">
+                    <?php if(isset($errors['loginEmail'])) echo "<span class='error-message'>" . htmlspecialchars($errors['loginEmail']) . "</span>";?>
                 </div>
 
                 <div class="mb-3">
                     <label for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" name="loginPassword" class="form-control">
-                    <?php if(isset($errors['loginPassword'])) echo "<span class='error-message'>{$errors['loginPassword']}</span>";?>
+                    <?php if(isset($errors['loginPassword'])) echo "<span class='error-message'>" . htmlspecialchars($errors['loginPassword']) . "</span>";?>
                 </div>
 
-                <button class="btn w-100 form-button">Login</button>
+                <button class="btn w-100 form-button" type="submit">Login</button>
             </form>
         </div>
     </main>
