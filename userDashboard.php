@@ -3,8 +3,16 @@ declare(strict_types= 1);
 require_once 'Ticket.php';
 require_once 'TicketRepository.php';
 require_once 'database.php';
+require_once 'auth.php';
+require_once 'enum/TicketPriorityEnum.php';
+require_once 'enum/TicketStatusEnum.php';
 
-session_start();
+require_login();
+
+if (current_user_type() === 'admin') {
+    header('Location: TicketManagement.php');
+    exit;
+}
 
 $search = $_GET['search'] ?? '';
 
@@ -44,7 +52,7 @@ if ($search) {
                             <a class="nav-link" href="./createTicket.php">Create a Ticket</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Logout</a>
+                            <a class="nav-link" href="./logout.php">Logout</a>
                         </li>
                     </ul>
                     <form class="d-flex" method="GET" action="userDashboard.php" role="search">
@@ -55,17 +63,66 @@ if ($search) {
             </div>
         </nav>
     </header>
-    <main class="d-flex justify-content-center align-items-center">
-        <?php foreach ($ticketsArray as $ticket): ?>
+    <main class="container my-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-                <?= $ticket->getTitle() ?>
-                <?= $ticket->getDescription() ?>
-                <?= $ticket->getPriority() ?>
-                <?= $ticket->getStatus() ?>
-                <?= $ticket->getAssignedTo() ?>
-                <a href="ticketPDF.php?id=<?= $ticket->getId() ?>" target="_blank" class="btn">Download PDF</a>
+                <h2 class="mb-0">My Tickets</h2>
+                <small class="text-muted">Welcome, <?= htmlspecialchars((string)($_SESSION['user_name'] ?? '')) ?></small>
             </div>
-        <?php endforeach ?>
+            <a class="btn btn-primary" href="./createTicket.php">Create Ticket</a>
+        </div>
+
+        <?php if (empty($ticketsArray)): ?>
+            <div class="alert alert-info">No tickets found.</div>
+        <?php else: ?>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                <?php foreach ($ticketsArray as $ticket):
+                    try {
+                        $statusEnum = TicketStatusEnum::from($ticket->getStatus());
+                    } catch (ValueError $e) {
+                        $statusEnum = TicketStatusEnum::Open;
+                    }
+
+                    try {
+                        $priorityEnum = TicketPriorityEnum::from((int)$ticket->getPriority());
+                    } catch (ValueError $e) {
+                        $priorityEnum = TicketPriorityEnum::Medium;
+                    }
+                    ?>
+                    <div class="col">
+                        <div class="card h-100 ticket-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h5 class="card-title mb-1">
+                                        <?= htmlspecialchars($ticket->getTitle()) ?>
+                                    </h5>
+                                    <span class="text-muted small">#<?= (int)$ticket->getId() ?></span>
+                                </div>
+
+                                <p class="card-text text-muted ticket-description">
+                                    <?= nl2br(htmlspecialchars((string)($ticket->getDescription() ?? ''))) ?>
+                                </p>
+
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge rounded-pill" style="background-color: <?= $statusEnum->color() ?>">
+                                        <?= htmlspecialchars($statusEnum->label()) ?>
+                                    </span>
+                                    <span class="badge rounded-pill" style="background-color: <?= $priorityEnum->color() ?>">
+                                        <?= htmlspecialchars($priorityEnum->label()) ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <?= htmlspecialchars((string)($ticket->getCreatedAt() ?? '')) ?>
+                                </small>
+                                <a href="ticketPDF.php?id=<?= (int)$ticket->getId() ?>" target="_blank" class="btn btn-sm btn-outline-secondary">PDF</a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach ?>
+            </div>
+        <?php endif; ?>
     </main>
     <footer class="footer">
         <div class="container d-flex justify-content-between align-items-center">
