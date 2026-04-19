@@ -178,7 +178,7 @@ class TicketRepository
             $row['status'],
             $row['priority'],
             $row['created_by'],
-            $row['assigned_to'],
+            $row['assigned_to'] !== null ? (int) $row['assigned_to'] : null,
             $row['created_at'],
             $row['updated_at']
         );
