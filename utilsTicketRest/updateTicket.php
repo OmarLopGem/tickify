@@ -2,8 +2,9 @@
 declare(strict_types=1);
 require_once '../TicketRepository.php';
 require_once '../database.php';
+require_once '../auth.php';
 
-session_start();
+require_admin();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = (int) ($_POST['id'] ?? 0);
