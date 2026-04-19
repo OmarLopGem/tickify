@@ -5,8 +5,9 @@ require_once 'TicketRepository.php';
 require_once 'database.php';
 require_once 'enum/TicketPriorityEnum.php';
 require_once 'enum/TicketStatusEnum.php';
+require_once 'auth.php';
 
-session_start();
+require_admin();
 
 $title = "";
 $description = "";
@@ -51,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="style.css">
-    <title>Tickify | Login</title>
+    <title>Tickify | Ticket Detail</title>
 </head>
 
 <body>
@@ -65,10 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="./ticketManagement.php">Management</a>
+                            <a class="nav-link" href="./TicketManagement.php">Management</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Logout</a>
+                            <a class="nav-link" href="./logout.php">Logout</a>
                         </li>
                     </ul>
                 </div>
