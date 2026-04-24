@@ -4,7 +4,11 @@ require_once '../TicketRepository.php';
 require_once '../database.php';
 require_once '../auth.php';
 
-require_admin();
+ensure_session_started();
+if (!is_logged_in()) {
+    header('Location: ../index.php');
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ticketId = (int) ($_POST['ticket_id'] ?? 0);

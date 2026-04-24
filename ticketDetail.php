@@ -7,66 +7,50 @@ require_once 'enum/TicketPriorityEnum.php';
 require_once 'enum/TicketStatusEnum.php';
 require_once 'auth.php';
 
-require_admin();
+ensure_session_started();
 
-$title = "";
-$description = "";
-$satus = "open";
-$createdBy = "";
-$assignedTo = null;
+if (!is_logged_in()) {
+    header('Location: index.php');
+    exit;
+}
+
 $errors = [];
 $ticket = null;
 $comments = [];
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    try {
-        $ticketRepository = new TicketRepository($pdo);
-        $ticketId = $_GET['id'] ?? '';
-
-
+    $ticketId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    
+    if ($ticketId > 0) {
         try {
             $ticketRepository = new TicketRepository($pdo);
-            $aux = (int) $ticketId;
-            $ticket = $ticketRepository->getById($aux);
-            $comments = $ticketRepository->getCommentsByTicketId($aux);
+            $ticket = $ticketRepository->getById($ticketId);
+            $comments = $ticketRepository->getCommentsByTicketId($ticketId);
         } catch (Exception $e) {
-            $errors['general'] = 'Error fetching ticket: ' . $e->getMessage();
+            $errors['general'] = 'Error: ' . $e->getMessage();
         }
-
-    } catch (Exception $e) {
-        $errors['general'] = 'Error fetching tickets: ' . $e->getMessage();
     }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <title>Tickify | Ticket Detail</title>
 </head>
-
 <body>
     <header>
         <nav class="navbar navbar-expand-lg">
             <div class="container-fluid">
-                <a class="navbar-brand" href="./userDashboard.php"><img src="./images/tickify_logo.png" class="header-logo"></a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <a class="navbar-brand" href="./index.php"><img src="./images/tickify_logo.png" class="header-logo"></a>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="./TicketManagement.php">Management</a>
+                            <a class="nav-link" href="<?= current_user_type() === 'admin' ? './TicketManagement.php' : './userDashboard.php' ?>">Dashboard</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="./logout.php">Logout</a>
@@ -76,18 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             </div>
         </nav>
     </header>
+
     <main class="container my-4">
-        <?php if (!empty($errors['general'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($errors['general']) ?></div>
-        <?php endif; ?>
-
         <?php if ($ticket): ?>
-            <a href="./TicketManagement.php" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back to Tickets</a>
+            <a href="<?= current_user_type() === 'admin' ? './TicketManagement.php' : './userDashboard.php' ?>" class="btn btn-sm btn-outline-secondary mb-3">&larr; Back</a>
 
-            <div class="card mb-4">
+            <div class="card mb-4 shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Ticket #<?= $ticket->getId() ?></h4>
-                    <small class="text-muted"><?= htmlspecialchars($ticket->getCreatedAt() ?? '') ?></small>
+                    <span class="badge bg-info text-dark"><?= htmlspecialchars($ticket->getStatus()) ?></span>
                 </div>
                 <div class="card-body">
                     <h5><?= htmlspecialchars($ticket->getTitle()) ?></h5>
@@ -95,94 +76,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
                     <hr>
 
-                    <form method="POST" action="./utilsTicketRest/updateTicket.php" class="row g-2 align-items-end">
-                        <input type="hidden" name="id" value="<?= $ticket->getId() ?>">
-
-                        <div class="col-auto">
-                            <label class="form-label mb-0">Status</label>
-                            <select name="status" class="form-select form-select-sm">
-                                <?php foreach (TicketStatusEnum::cases() as $s): ?>
-                                    <option value="<?= $s->value ?>" <?= ($ticket->getStatus() === $s->value) ? 'selected' : '' ?>>
-                                        <?= $s->label() ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                    <?php if (current_user_type() === 'admin'): ?>
+                        <div class="admin-controls p-3 bg-light rounded border">
+                            <h6>Admin Controls (Edit Status/Priority)</h6>
+                            <form method="POST" action="./utilsTicketRest/updateTicket.php" class="row g-2 align-items-end">
+                                <input type="hidden" name="id" value="<?= $ticket->getId() ?>">
+                                <div class="col-auto">
+                                    <label class="form-label small">Status</label>
+                                    <select name="status" class="form-select form-select-sm">
+                                        <?php foreach (TicketStatusEnum::cases() as $s): ?>
+                                            <option value="<?= $s->value ?>" <?= ($ticket->getStatus() === $s->value) ? 'selected' : '' ?>><?= $s->label() ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label small">Priority</label>
+                                    <select name="priority" class="form-select form-select-sm">
+                                        <?php foreach (TicketPriorityEnum::cases() as $p): ?>
+                                            <option value="<?= $p->value ?>" <?= ($ticket->getPriority() === $p->value) ? 'selected' : '' ?>><?= $p->label() ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" class="btn btn-sm btn-primary">Update Ticket</button>
+                                </div>
+                            </form>
                         </div>
-
-                        <div class="col-auto">
-                            <label class="form-label mb-0">Priority</label>
-                            <select name="priority" class="form-select form-select-sm">
-                                <?php foreach (TicketPriorityEnum::cases() as $p): ?>
-                                    <option value="<?= $p->value ?>" <?= ($ticket->getPriority() === $p->value) ? 'selected' : '' ?>>
-                                        <?= $p->label() ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-sm btn-primary">Update</button>
-                        </div>
-                    </form>
-
-                    <hr>
+                        <hr>
+                    <?php endif; ?>
 
                     <div class="d-flex gap-2">
-                        <?php
-                        $statusEnum = TicketStatusEnum::from($ticket->getStatus());
-                        $priorityEnum = TicketPriorityEnum::from($ticket->getPriority());
-                        ?>
-                        <span class="badge rounded-pill" style="background-color: <?= $statusEnum->color() ?>">
-                            <?= $statusEnum->label() ?>
-                        </span>
-                        <span class="badge rounded-pill" style="background-color: <?= $priorityEnum->color() ?>">
-                            <?= $priorityEnum->label() ?>
-                        </span>
-                        <span class="text-muted ms-auto">
-                            Assigned to: <?= $ticket->getAssignedTo() ?? 'Unassigned' ?>
-                        </span>
+                        <span class="text-muted">Created: <?= htmlspecialchars($ticket->getCreatedAt() ?? '') ?></span>
+                        <span class="text-muted ms-auto">Assigned to: <?= $ticket->getAssignedTo() ?? 'Unassigned' ?></span>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0">Comments (<?= count($comments) ?>)</h5>
                 </div>
                 <div class="card-body">
-                    <?php if (!empty($comments)): ?>
-                        <?php foreach ($comments as $comment): ?>
-                            <div class="d-flex mb-3">
-                                <div class="bg-light rounded p-3 w-100">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <strong>User #<?= $comment->getAuthorId() ?></strong>
-                                        <small class="text-muted"><?= htmlspecialchars($comment->getCreatedAt() ?? '') ?></small>
+                    <div class="comment-list mb-4">
+                        <?php if (!empty($comments)): ?>
+                            <?php foreach ($comments as $comment): ?>
+                                <div class="p-2 mb-2 border-bottom">
+                                    <div class="d-flex justify-content-between">
+                                        <small><strong>User #<?= is_array($comment) ? $comment['author_id'] : $comment->getAuthorId() ?></strong></small>
+                                        <small class="text-muted"><?= is_array($comment) ? $comment['created_at'] : $comment->getCreatedAt() ?></small>
                                     </div>
-                                    <p class="mb-0"><?= nl2br(htmlspecialchars($comment->getBody())) ?></p>
+                                    <p class="mb-0"><?= nl2br(htmlspecialchars(is_array($comment) ? $comment['body'] : $comment->getBody())) ?></p>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="text-muted">No comments yet.</p>
-                    <?php endif; ?>
-
-                    <hr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-muted">No comments yet.</p>
+                        <?php endif; ?>
+                    </div>
 
                     <form method="POST" action="./utilsTicketRest/addComment.php">
                         <input type="hidden" name="ticket_id" value="<?= $ticket->getId() ?>">
                         <div class="mb-2">
-                            <textarea name="body" class="form-control" rows="3" placeholder="Write a comment..."
-                                required></textarea>
+                            <textarea name="body" class="form-control" rows="3" placeholder="Add a comment..." required></textarea>
                         </div>
-                        <button type="submit" class="btn btn-sm btn-primary">Post Comment</button>
+                        <button type="submit" class="btn btn-sm btn-dark">Post Comment</button>
                     </form>
                 </div>
             </div>
 
         <?php else: ?>
-            <div class="alert alert-warning">Ticket not found.</div>
+            <div class="alert alert-warning">Ticket not found or access denied.</div>
         <?php endif; ?>
     </main>
 </body>
-
 </html>
